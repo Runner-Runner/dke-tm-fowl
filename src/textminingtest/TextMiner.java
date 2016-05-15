@@ -14,6 +14,7 @@ import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -89,22 +90,7 @@ public class TextMiner
 
       // run all the selected Annotators on this text
       pipeline.annotate(annotation);
-
-      // this prints out the results of sentence analysis to file(s) in good formats
-      pipeline.prettyPrint(annotation, out);
-      pipeline.xmlPrint(annotation, xmlOut);
-
-      // Access the Annotation in code
-      // The toString() method on an Annotation just prints the text of the Annotation
-      // But you can see what is in it with other methods like toShorterString()
-      out.println();
-      out.println("The top level annotation");
-      out.println(annotation.toShorterString());
-      out.println();
-
-      // An Annotation is a Map with Class keys for the linguistic analysis types.
-      // You can get and use the various analyses individually.
-      // For instance, this gets the parse tree of the first sentence in the text.
+      
       List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
       if (sentences != null && !sentences.isEmpty())
       {
@@ -135,6 +121,20 @@ public class TextMiner
           }
         }
 
+      //OUTPUT ONLY
+      
+      // this prints out the results of sentence analysis to file(s) in good formats
+      pipeline.prettyPrint(annotation, out);
+      pipeline.xmlPrint(annotation, xmlOut);
+
+      // Access the Annotation in code
+      // The toString() method on an Annotation just prints the text of the Annotation
+      // But you can see what is in it with other methods like toShorterString()
+      out.println();
+      out.println("The top level annotation");
+      out.println(annotation.toShorterString());
+      out.println();
+        
         CoreMap sentence = sentences.get(0);
         out.println("The keys of the first sentence's CoreMap are:");
         out.println(sentence.keySet());
