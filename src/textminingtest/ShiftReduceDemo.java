@@ -1,6 +1,5 @@
 package textminingtest;
 
-
 import java.io.StringReader;
 import java.util.List;
 
