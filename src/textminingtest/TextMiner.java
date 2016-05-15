@@ -2,9 +2,9 @@ package textminingtest;
 
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
 import edu.stanford.nlp.hcoref.data.CorefChain;
-import edu.stanford.nlp.io.EncodingPrintWriter;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
@@ -16,6 +16,7 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -24,14 +25,21 @@ public class TextMiner
 {
   private String[] fileNames;
 
+  private EntityManager entityManager;
+  
   private static final String ANNOTATORS
           = "tokenize, ssplit, pos, lemma, ner, parse, dcoref, sentiment";
 
+  public TextMiner()
+  {
+    entityManager = new EntityManager();
+  }
+  
   public void setFileNames(String... fileNames)
   {
     this.fileNames = fileNames;
   }
-  
+
   public void mineText(boolean writeInFile, String directText)
   {
     try
@@ -100,6 +108,33 @@ public class TextMiner
       List<CoreMap> sentences = annotation.get(CoreAnnotations.SentencesAnnotation.class);
       if (sentences != null && !sentences.isEmpty())
       {
+        for (CoreMap sentence : sentences)
+        {
+          List<String> personNamesInSentence = new ArrayList<>();
+          for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class))
+          {
+            String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
+            if ("PERSON".equals(namedEntityTag))
+            {
+              String word = token.get(CoreAnnotations.TextAnnotation.class);
+              if(!personNamesInSentence.contains(word))
+              {
+                personNamesInSentence.add(word);
+              }
+            }
+          }
+          for(int i=0; i<personNamesInSentence.size(); i++)
+          {
+            String personName1 = personNamesInSentence.get(i);
+            for(int j=i+1; j<personNamesInSentence.size(); j++)
+            {
+              String personName2 = personNamesInSentence.get(j);
+              
+              entityManager.increaseRelation(personName1, personName2);
+            }
+          }
+        }
+
         CoreMap sentence = sentences.get(0);
         out.println("The keys of the first sentence's CoreMap are:");
         out.println(sentence.keySet());
@@ -148,8 +183,8 @@ public class TextMiner
         }
         out.println();
 
-        out.println("The first sentence overall sentiment rating is " + 
-                sentence.get(SentimentCoreAnnotations.SentimentClass.class));
+        out.println("The first sentence overall sentiment rating is "
+                + sentence.get(SentimentCoreAnnotations.SentimentClass.class));
       }
       IOUtils.closeIgnoringExceptions(out);
       IOUtils.closeIgnoringExceptions(xmlOut);

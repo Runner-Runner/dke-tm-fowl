@@ -11,18 +11,20 @@ public class EntityManager
     entities = new HashMap<>();
   }
   
-  private void increaseRelation(String entityName1, String entityName2)
+  public void increaseRelation(String entityName1, String entityName2)
   {
     NamedEntity entity1 = entities.get(entityName1);
     if(entity1 == null)
     {
-      entity1 = entities.put(entityName1, new NamedEntity(entityName1));
+      entity1 = new NamedEntity(entityName1);
+      entities.put(entityName1, entity1);
     }
     
     NamedEntity entity2 = entities.get(entityName2);
     if(entity2 == null)
     {
-      entity2 = entities.put(entityName2, new NamedEntity(entityName2));
+      entity2 = new NamedEntity(entityName2);
+      entities.put(entityName2, entity2);
     }
     
     Relation relation = entity1.getRelation(entity2);
