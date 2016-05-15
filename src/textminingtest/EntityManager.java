@@ -37,5 +37,9 @@ public class EntityManager
       relation.addWeight();
     }
   }
-  
+
+  public HashMap<String, NamedEntity> getEntities()
+  {
+    return entities;
+  }
 }
