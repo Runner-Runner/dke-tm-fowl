@@ -1,3 +1,5 @@
+package textminingtest;
+
 
 import edu.stanford.nlp.parser.lexparser.TreebankLangParserParams;
 import edu.stanford.nlp.parser.lexparser.EnglishTreebankParserParams;
