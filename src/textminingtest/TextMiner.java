@@ -7,7 +7,7 @@ import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
-import java.io.IOException;
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +16,7 @@ import java.util.Properties;
 
 public class TextMiner
 {
-  private String[] fileNames;
+  private String directory;
 
   private EntityManager entityManager;
 
@@ -33,9 +33,9 @@ public class TextMiner
     corefIdMapping = new HashMap<>();
   }
 
-  public void setFileNames(String... fileNames)
+  public void setDirectory(String directory)
   {
-    this.fileNames = fileNames;
+    this.directory = directory;
   }
 
   public void mineText(boolean writeInFile, String directText)
@@ -73,15 +73,19 @@ public class TextMiner
       }
       else
       {
-        for (String fileName : fileNames)
+        File directoryFile = new File(directory);
+        File[] listFiles = directoryFile.listFiles();
+        for (File file : listFiles)
         {
-          String fileText = IOUtils.slurpFileNoExceptions(fileName);
+          String fileText = IOUtils.slurpFileNoExceptions(file);
           fileAnnotations.add(new Annotation(fileText));
         }
       }
 
       for (Annotation annotation : fileAnnotations)
       {
+        System.out.println("Processing annotation: "+annotation.toString());
+        
         //ids might change for different texts -> reset
         corefIdMapping.clear();
         
