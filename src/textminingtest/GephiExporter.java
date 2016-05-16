@@ -8,8 +8,7 @@ import java.util.HashSet;
 
 public class GephiExporter {
 	
-	public static void exportCSV(Collection<NamedEntity> entities, String name) throws 
-          FileNotFoundException, UnsupportedEncodingException{
+	public static void exportCSV(Collection<NamedEntity> entities, String name) throws FileNotFoundException, UnsupportedEncodingException{
 		PrintWriter nodewriter = new PrintWriter(name+"-nodes.csv", "UTF-8");
 		PrintWriter edgewriter = new PrintWriter(name+"-edges.csv", "UTF-8");
 		nodewriter.println("id,label,timeset,modularity_class");

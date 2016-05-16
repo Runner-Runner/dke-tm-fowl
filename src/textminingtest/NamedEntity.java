@@ -59,4 +59,8 @@ public void addRelation(NamedEntity otherEntity, Relation relation)
   {
     return relationMap.get(otherEntity);
   }
+  
+	public boolean equals(NamedEntity obj) {
+		return name.equals(name);
+	}
 }
