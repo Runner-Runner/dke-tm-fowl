@@ -36,9 +36,9 @@ public class TextMiningTest
   public static void test4()
   {
     TextMiner textMiner = new TextMiner();
-    textMiner.setFileNames("data/SmallTest.txt");
-//    textMiner.mine(false, "John hates David.");
+    textMiner.setFileNames("data/cleanTest.txt");
     textMiner.mineText(true, null);
+//    textMiner.mineText(true, "Because John is tall. He talks to David.");
   }
   
   

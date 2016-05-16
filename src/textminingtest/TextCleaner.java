@@ -1,7 +1,6 @@
 package textminingtest;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -9,7 +8,7 @@ import java.io.PrintWriter;
 public class TextCleaner {
 	public static void main(String[] args) {
 		try {
-			cleanTxt("data/SmallTest.txt", "data/cleanTest.txt");
+			cleanTxt("data/ArtemisFowl1.txt", "data/cleanTest.txt");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -27,6 +26,7 @@ public class TextCleaner {
 		    		line = br.readLine();
 		    		continue;
 		    	}
+		    	line = line.replaceAll("Artemis","Artemisss");
 		    	writer.println(line);
 		        line = br.readLine();
 		    }

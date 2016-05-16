@@ -13,6 +13,7 @@ public class WekaParser {
 		for(NamedEntity ne : entities){
 			relationwriter.print("@attribute "+ne.getName()+" REAL");
 		}
+		relationwriter.println("@data");
 		for(NamedEntity ne : entities){
 			Iterator<NamedEntity> it = entities.iterator();
 			while(it.hasNext()){
