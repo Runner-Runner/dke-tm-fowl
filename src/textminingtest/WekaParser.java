@@ -11,7 +11,7 @@ public class WekaParser {
 		PrintWriter relationwriter = new PrintWriter(output+"-relation.arff", "UTF-8");
 		relationwriter.println("@relation entities");
 		for(NamedEntity ne : entities){
-			relationwriter.print("@attribute "+ne.getName()+" REAL");
+			relationwriter.println("@attribute "+ne.getName()+" REAL");
 		}
 		relationwriter.println("@data");
 		for(NamedEntity ne : entities){

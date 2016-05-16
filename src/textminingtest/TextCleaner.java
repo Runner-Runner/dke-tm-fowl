@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 public class TextCleaner {
 	public static void main(String[] args) {
 		try {
-			cleanTxt("data/ArtemisFowl1.txt", "data/cleanTest.txt");
+			cleanTxt("data/SmallTest.txt", "data/cleanTest.txt");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

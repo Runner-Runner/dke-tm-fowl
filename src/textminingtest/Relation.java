@@ -11,11 +11,12 @@ public class Relation {
     this.entity2 = entity2;
   }
   
-  public static void createRelation(NamedEntity entity1, NamedEntity entity2)
+  public static Relation createRelation(NamedEntity entity1, NamedEntity entity2)
   {
     Relation relation = new Relation(entity1, entity2);
     entity1.addRelation(entity2, relation);
     entity2.addRelation(entity1, relation);
+    return relation;
   }
 
   public void addWeight()
@@ -36,6 +37,10 @@ public class Relation {
   public int getWeight()
   {
     return weight;
+  }
+  
+  public void increase(int weight){
+	  this.weight+=weight;
   }
   
   

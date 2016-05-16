@@ -1,6 +1,8 @@
 package textminingtest;
 
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map.Entry;
 
 public class EntityManager
 {
@@ -41,5 +43,33 @@ public class EntityManager
   public HashMap<String, NamedEntity> getEntities()
   {
     return entities;
+  }
+  
+  public void merge(EntityManager em){
+	  HashSet<String> alreadyMerged = new HashSet<>();
+	  for(NamedEntity ne: em.entities.values()){
+		  NamedEntity entityFrom = entities.get(ne.getName());
+		  if(entityFrom == null){
+			  entityFrom = new NamedEntity(ne.getName());
+			  entities.put(entityFrom.getName(), entityFrom);
+		  }
+		  for(Entry<NamedEntity, Relation> entry : ne.getRelationMap().entrySet()){
+			  String to = entry.getKey().getName();
+			  if(alreadyMerged.contains(to))
+				  continue;
+			  NamedEntity entityTo = entities.get(to);
+			  if(entityTo == null){
+				  entityTo = new NamedEntity(to);
+				  entities.put(to, entityTo);
+			  }
+			  Relation re = entityFrom.getRelation(entityTo);
+			  if(re == null){
+				  re = Relation.createRelation(entityFrom, entityTo);
+				  re.increase(-1);
+			  }
+			  re.increase(entry.getValue().getWeight());
+		  }
+		  alreadyMerged.add(ne.getName());
+	  }
   }
 }
