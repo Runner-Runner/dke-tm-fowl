@@ -3,12 +3,13 @@ package textminingtest;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
 public class GephiExporter {
 	
-	public static void exportCSV(List<NamedEntity> entities, String name) throws FileNotFoundException, UnsupportedEncodingException{
+	public static void exportCSV(Collection<NamedEntity> entities, String name) throws FileNotFoundException, UnsupportedEncodingException{
 		PrintWriter nodewriter = new PrintWriter(name+"-nodes.csv", "UTF-8");
 		PrintWriter edgewriter = new PrintWriter(name+"-edges.csv", "UTF-8");
 		nodewriter.println("id,label,timeset,modularity_class");

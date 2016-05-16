@@ -188,8 +188,10 @@ public class TextMiner
       }
       IOUtils.closeIgnoringExceptions(out);
       IOUtils.closeIgnoringExceptions(xmlOut);
+      GephiExporter.exportCSV(entityManager.getEntities().values(), "test");
+      WekaParser.entitiesToWeka(entityManager.getEntities().values(), "test");
     }
-    catch (IOException ex)
+    catch (Exception ex)
     {
       System.out.println(ex.getMessage());
     }
