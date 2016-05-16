@@ -8,7 +8,7 @@ import java.io.PrintWriter;
 public class TextCleaner {
 	public static void main(String[] args) {
 		try {
-			cleanTxt("data/SmallTest.txt", "data/cleanTest.txt");
+			cleanTxt("data/small/1-the-book.txt", "data/small/cleanTest.txt");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -26,7 +26,6 @@ public class TextCleaner {
 		    		line = br.readLine();
 		    		continue;
 		    	}
-		    	line = line.replaceAll("Artemis","Artemisss");
 		    	writer.println(line);
 		        line = br.readLine();
 		    }

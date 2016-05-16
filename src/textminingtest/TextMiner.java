@@ -1,6 +1,7 @@
 package textminingtest;
 
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
+import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
@@ -23,7 +24,7 @@ public class TextMiner
   private HashMap<Integer, String> corefIdMapping;
 
   private static final String ANNOTATORS
-          = "tokenize, ssplit, pos, lemma, ner, parse, dcoref, sentiment";
+          = "tokenize, ssplit, pos, lemma, ner, regexner, parse, dcoref, sentiment";
   
   private static final String ENTITY_TAG = "PERSON";
 
@@ -54,7 +55,7 @@ public class TextMiner
 
       Properties props = new Properties();
       props.setProperty("annotators", ANNOTATORS);
-//      props.setProperty("regexner.mapping", "regexner.txt");
+      props.setProperty("regexner.mapping", "regexner.txt");
 
       StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
