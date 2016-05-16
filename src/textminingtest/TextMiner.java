@@ -1,25 +1,17 @@
 package textminingtest;
 
-import edu.stanford.nlp.hcoref.CorefCoreAnnotations;
-import edu.stanford.nlp.hcoref.data.CorefChain;
+import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
-import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.semgraph.SemanticGraph;
-import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
-import edu.stanford.nlp.trees.Tree;
-import edu.stanford.nlp.trees.TreeCoreAnnotations;
 import edu.stanford.nlp.util.CoreMap;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 public class TextMiner
@@ -28,12 +20,15 @@ public class TextMiner
 
   private EntityManager entityManager;
   
+  private HashMap<Integer, String> corefIdMapping;
+  
   private static final String ANNOTATORS
           = "tokenize, ssplit, pos, lemma, ner, parse, dcoref, sentiment";
 
   public TextMiner()
   {
     entityManager = new EntityManager();
+    corefIdMapping = new HashMap<>();
   }
   
   public void setFileNames(String... fileNames)
@@ -99,15 +94,30 @@ public class TextMiner
           List<String> personNamesInSentence = new ArrayList<>();
           for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class))
           {
+            Integer corefClusterId = token.get(CorefClusterIdAnnotation.class);
+            String name = corefIdMapping.get(corefClusterId);
+            
             String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
+            String word = null;
             if ("PERSON".equals(namedEntityTag))
             {
-              String word = token.get(CoreAnnotations.TextAnnotation.class);
-              if(!personNamesInSentence.contains(word))
+              word = token.get(CoreAnnotations.TextAnnotation.class);
+              
+              if(corefClusterId != null && name == null)
               {
-                personNamesInSentence.add(word);
+                corefIdMapping.put(corefClusterId, word);
               }
             }
+            else
+            {
+              word = name;
+            }
+            
+            if(word != null && !personNamesInSentence.contains(word))
+            {
+              personNamesInSentence.add(word);
+            }
+            
           }
           for(int i=0; i<personNamesInSentence.size(); i++)
           {
@@ -124,74 +134,77 @@ public class TextMiner
       //OUTPUT ONLY
       
       // this prints out the results of sentence analysis to file(s) in good formats
-      pipeline.prettyPrint(annotation, out);
-      pipeline.xmlPrint(annotation, xmlOut);
-
-      // Access the Annotation in code
-      // The toString() method on an Annotation just prints the text of the Annotation
-      // But you can see what is in it with other methods like toShorterString()
-      out.println();
-      out.println("The top level annotation");
-      out.println(annotation.toShorterString());
-      out.println();
-        
-        CoreMap sentence = sentences.get(0);
-        out.println("The keys of the first sentence's CoreMap are:");
-        out.println(sentence.keySet());
-        out.println();
-        out.println("The first sentence is:");
-        out.println(sentence.toShorterString());
-        out.println();
-        out.println("The first sentence tokens are:");
-        for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class))
-        {
-          out.println(token.toShorterString());
-        }
-        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
-        out.println();
-        out.println("The first sentence parse tree is:");
-        tree.pennPrint(out);
-        out.println();
-        out.println("The first sentence basic dependencies are:");
-        out.println(sentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class).toString(SemanticGraph.OutputFormat.LIST));
-        out.println("The first sentence collapsed, CC-processed dependencies are:");
-        SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
-        out.println(graph.toString(SemanticGraph.OutputFormat.LIST));
-
-        // Access coreference. In the coreference link graph,
-        // each chain stores a set of mentions that co-refer with each other,
-        // along with a method for getting the most representative mention.
-        // Both sentence and token offsets start at 1!
-        out.println("Coreference information");
-        Map<Integer, CorefChain> corefChains
-                = annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
-        if (corefChains == null)
-        {
-          return;
-        }
-        for (Map.Entry<Integer, CorefChain> entry : corefChains.entrySet())
-        {
-          out.println("Chain " + entry.getKey() + " ");
-          for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder())
-          {
-            // We need to subtract one since the indices count from 1 but the Lists start from 0
-            List<CoreLabel> tokens = sentences.get(m.sentNum - 1).get(CoreAnnotations.TokensAnnotation.class);
-            // We subtract two for end: one for 0-based indexing, and one because we want last token of mention not one following.
-            out.println("  " + m + ", i.e., 0-based character offsets [" + tokens.get(m.startIndex - 1).beginPosition()
-                    + ", " + tokens.get(m.endIndex - 2).endPosition() + ")");
-          }
-        }
-        out.println();
-
-        out.println("The first sentence overall sentiment rating is "
-                + sentence.get(SentimentCoreAnnotations.SentimentClass.class));
+//      pipeline.prettyPrint(annotation, out);
+//      pipeline.xmlPrint(annotation, xmlOut);
+//
+//      // Access the Annotation in code
+//      // The toString() method on an Annotation just prints the text of the Annotation
+//      // But you can see what is in it with other methods like toShorterString()
+//      out.println();
+//      out.println("The top level annotation");
+//      out.println(annotation.toShorterString());
+//      out.println();
+//        
+//        CoreMap sentence = sentences.get(0);
+//        out.println("The keys of the first sentence's CoreMap are:");
+//        out.println(sentence.keySet());
+//        out.println();
+//        out.println("The first sentence is:");
+//        out.println(sentence.toShorterString());
+//        out.println();
+//        out.println("The first sentence tokens are:");
+//        for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class))
+//        {
+//          out.println(token.toShorterString());
+//        }
+//        Tree tree = sentence.get(TreeCoreAnnotations.TreeAnnotation.class);
+//        out.println();
+//        out.println("The first sentence parse tree is:");
+//        tree.pennPrint(out);
+//        out.println();
+//        out.println("The first sentence basic dependencies are:");
+//        out.println(sentence.get(SemanticGraphCoreAnnotations.BasicDependenciesAnnotation.class).toString(SemanticGraph.OutputFormat.LIST));
+//        out.println("The first sentence collapsed, CC-processed dependencies are:");
+//        SemanticGraph graph = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+//        out.println(graph.toString(SemanticGraph.OutputFormat.LIST));
+//
+//        // Access coreference. In the coreference link graph,
+//        // each chain stores a set of mentions that co-refer with each other,
+//        // along with a method for getting the most representative mention.
+//        // Both sentence and token offsets start at 1!
+//        out.println("Coreference information");
+//        Map<Integer, CorefChain> corefChains
+//                = annotation.get(CorefCoreAnnotations.CorefChainAnnotation.class);
+//        if (corefChains == null)
+//        {
+//          return;
+//        }
+//        for (Map.Entry<Integer, CorefChain> entry : corefChains.entrySet())
+//        {
+//          out.println("Chain " + entry.getKey() + " ");
+//          for (CorefChain.CorefMention m : entry.getValue().getMentionsInTextualOrder())
+//          {
+//            // We need to subtract one since the indices count from 1 but the Lists start from 0
+//            List<CoreLabel> tokens = sentences.get(m.sentNum - 1).get(CoreAnnotations.TokensAnnotation.class);
+//            // We subtract two for end: one for 0-based indexing, and one because we want last token of mention not one following.
+//            out.println("  " + m + ", i.e., 0-based character offsets [" + tokens.get(m.startIndex - 1).beginPosition()
+//                    + ", " + tokens.get(m.endIndex - 2).endPosition() + ")");
+//          }
+//        }
+//        out.println();
+//
+//        out.println("The first sentence overall sentiment rating is "
+//                + sentence.get(SentimentCoreAnnotations.SentimentClass.class));
       }
       IOUtils.closeIgnoringExceptions(out);
       IOUtils.closeIgnoringExceptions(xmlOut);
+      
+      GephiExporter.exportCSV(entityManager.getEntities().values(), "SmallTest");
     }
     catch (IOException ex)
     {
       System.out.println(ex.getMessage());
     }
+    
   }
 }
