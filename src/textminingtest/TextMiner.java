@@ -52,17 +52,9 @@ public class TextMiner
         out = new PrintWriter(System.out);
       }
 
-      // Create a CoreNLP pipeline. To build the default pipeline, you can just use:
-      //   StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-      // Here's a more complex setup example:
-      //   Properties props = new Properties();
-      //   props.put("annotators", "tokenize, ssplit, pos, lemma, ner, depparse");
-      //   props.put("ner.model", "edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz");
-      //   props.put("ner.applyNumericClassifiers", "false");
-      //   StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-      // Add in sentiment
       Properties props = new Properties();
       props.setProperty("annotators", ANNOTATORS);
+//      props.setProperty("regexner.mapping", "regexner.txt");
 
       StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
@@ -82,9 +74,12 @@ public class TextMiner
         }
       }
 
+      int c = 0;
       for (Annotation annotation : fileAnnotations)
       {
-        System.out.println("Processing annotation: "+annotation.toString());
+        c++;
+        System.out.println("Processing annotation: "+c);
+        PrintWriter xmlOut = new PrintWriter("xmlOutputAnno"+c+".xml");
         
         //ids might change for different texts -> reset
         corefIdMapping.clear();
@@ -137,6 +132,9 @@ public class TextMiner
             }
           }
         }
+        
+        pipeline.xmlPrint(annotation, xmlOut);
+        IOUtils.closeIgnoringExceptions(xmlOut);
       }
 
       IOUtils.closeIgnoringExceptions(out);
