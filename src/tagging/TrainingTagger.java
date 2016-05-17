@@ -10,10 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import javax.swing.JFrame;
 
 //TODO Needed?
@@ -30,11 +27,8 @@ public class TrainingTagger
 
   private List<String> taggingLines;
 
-  private Set<String> entityNames;
-  
   public TrainingTagger()
   {
-    entityNames = new HashSet<>();
     taggingPanel = new TaggingPanel();
     buttonListener = new ActionListener()
     {
@@ -50,42 +44,21 @@ public class TrainingTagger
 
   public static void main(String args[])
   {
-    ManualEntityTagger manualEntityTagger = new ManualEntityTagger();
-    manualEntityTagger.start("data/ArtemisFowl1.txt");
+    TrainingTagger trainingTagger = new TrainingTagger();
+    trainingTagger.start("data/ArtemisFowl1.txt", 0);
   }
 
-  public void start(String fileName)
+  public void start(String fileName, int startIndex)
   {
     try
     {
-      File file = new File("data/EntityTagging.txt");
+      File tsvFile = new File(fileName + "_tagged.tsv");
 
-      if (file.exists())
-      {
-        String taggingText = IOUtils.slurpFileNoExceptions(file);
-        taggingLines = new ArrayList<>();
-        taggingLines.addAll(Arrays.asList(taggingText.split("\n")));
-        
-        for(int i=1; i<taggingLines.size(); i++)
-        {
-          String line = taggingLines.get(i);
-          int index = line.indexOf("=");
-          if(index == -1)
-            continue;
-          String name = line.substring(0, index);
-          entityNames.add(name);
-        }
-        
-        wordIndex = Integer.parseInt(taggingLines.get(0));
-      }
-      else
-      {
-        wordIndex = 0;
-        taggingLines = new ArrayList<>();
-        taggingLines.add("0\n");
-      }
+      wordIndex = startIndex;
+      taggingLines = new ArrayList<>();
+      taggingLines.add("map = word=0,answer=1\n");
 
-      writer = new PrintWriter("data/EntityTagging.txt", "UTF-8");
+      writer = new PrintWriter(tsvFile.getPath(), "UTF-8");
       JFrame taggingFrame = new JFrame("Manual Entity Tagger");
       taggingFrame.setLayout(new GridLayout());
       taggingFrame.setSize(265, 375);
@@ -97,13 +70,13 @@ public class TrainingTagger
         public void windowClosing(WindowEvent e)
         {
           String taggingText = "";
-          taggingText = ""+wordIndex;
-          for (int i = 1; i < taggingLines.size(); i++)
+          for (String line : taggingLines)
           {
-            taggingText += taggingLines.get(i);
+            taggingText += line;
           }
           writer.print(taggingText);
           writer.close();
+          System.out.println("Stopped at word index " + wordIndex);
         }
       });
       taggingFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -117,7 +90,7 @@ public class TrainingTagger
       });
 
       String fileText = IOUtils.slurpFileNoExceptions(fileName);
-      words = fileText.split(" ");
+      words = fileText.split("\\s+");
 
       showNextEntity();
     }
@@ -129,7 +102,7 @@ public class TrainingTagger
 
   private void buttonPressed(String entityClass)
   {
-    taggingLines.add("\n" + words[wordIndex] + "=" + entityClass);
+    taggingLines.add(words[wordIndex] + "\t" + entityClass + "\n");
     showNextEntity();
   }
 
@@ -138,25 +111,20 @@ public class TrainingTagger
     for (int i = wordIndex; i < words.length; i++)
     {
       String word = words[i].trim();
-      if (!word.isEmpty() && Character.isUpperCase(word.charAt(0)) && 
-              !entityNames.contains(word))
+      
+      taggingPanel.setEntity(word);
+
+      int begin = Math.max(i - 8, 0);
+      int end = Math.min(i + 8, words.length - 1);
+      String context = "";
+      for (int j = begin; j <= end; j++)
       {
-        entityNames.add(word);
-        
-        taggingPanel.setEntity(word);
-
-        int begin = Math.max(i - 8, 0);
-        int end = Math.min(i + 8, words.length - 1);
-        String context = "";
-        for (int j = begin; j <= end; j++)
-        {
-          context += words[j] + " ";
-        }
-        taggingPanel.setContext(context);
-
-        wordIndex = i+1;
-        return;
+        context += words[j] + " ";
       }
+      taggingPanel.setContext(context);
+
+      wordIndex = i + 1;
+      return;
     }
     wordIndex = -1;
   }
