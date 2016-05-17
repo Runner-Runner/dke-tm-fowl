@@ -27,12 +27,10 @@
                       <Component id="entityLabel" min="-2" pref="132" max="-2" attributes="0"/>
                   </Group>
                   <Component id="jLabel2" alignment="0" min="-2" max="-2" attributes="0"/>
-                  <Group type="103" alignment="0" groupAlignment="1" max="-2" attributes="0">
-                      <Component id="noneButton" alignment="0" max="32767" attributes="0"/>
-                      <Component id="organizationButton" alignment="0" max="32767" attributes="0"/>
-                      <Component id="personButton" alignment="0" max="32767" attributes="0"/>
-                      <Component id="locationButton" alignment="0" max="32767" attributes="0"/>
-                  </Group>
+                  <Component id="noneButton" alignment="0" max="32767" attributes="0"/>
+                  <Component id="organizationButton" alignment="0" max="32767" attributes="0"/>
+                  <Component id="personButton" alignment="0" max="32767" attributes="0"/>
+                  <Component id="locationButton" alignment="0" max="32767" attributes="0"/>
               </Group>
               <EmptySpace max="32767" attributes="0"/>
           </Group>
@@ -126,7 +124,6 @@
             <Property name="lineWrap" type="boolean" value="true"/>
             <Property name="rows" type="int" value="5"/>
             <Property name="wrapStyleWord" type="boolean" value="true"/>
-            <Property name="enabled" type="boolean" value="false"/>
           </Properties>
         </Component>
       </SubComponents>

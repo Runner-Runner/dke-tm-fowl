@@ -44,7 +44,7 @@ public class TrainingTagger
   public static void main(String args[])
   {
     TrainingTagger trainingTagger = new TrainingTagger();
-    trainingTagger.start("data/ArtemisFowl1.txt", 0);
+    trainingTagger.start("data/ArtemisFowl1/chapters/clean/0-prologue.txt", 0);
   }
 
   public void start(String fileName, int startIndex)
@@ -100,30 +100,30 @@ public class TrainingTagger
   private void buttonPressed(String entityClass)
   {
     taggingLines.add(words[wordIndex] + "\t" + entityClass);
+    wordIndex++;
     showNextEntity();
   }
 
   private void showNextEntity()
   {
-    for (int i = wordIndex; i < words.length; i++)
+    if(wordIndex >= words.length)
     {
-      String word = words[i].trim();
-      
-      taggingPanel.setEntity(word);
-
-      int begin = Math.max(i - 8, 0);
-      int end = Math.min(i + 8, words.length - 1);
-      String context = "";
-      for (int j = begin; j <= end; j++)
-      {
-        context += words[j] + " ";
-      }
-      taggingPanel.setContext(context);
-
-      wordIndex = i + 1;
+      System.out.println("Text is fully tagged.");
       return;
     }
-    wordIndex = -1;
+
+    String word = words[wordIndex].trim();
+
+    taggingPanel.setEntity(word);
+
+    int begin = Math.max(wordIndex - 8, 0);
+    int end = Math.min(wordIndex + 8, words.length - 1);
+    String context = "";
+    for (int j = begin; j <= end; j++)
+    {
+      context += words[j] + " ";
+    }
+    taggingPanel.setContext(context);
   }
 
 }
