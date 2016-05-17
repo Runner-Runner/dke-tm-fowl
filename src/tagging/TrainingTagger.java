@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFrame;
 
-//TODO Needed?
 public class TrainingTagger
 {
   private ActionListener buttonListener;
@@ -56,7 +55,7 @@ public class TrainingTagger
 
       wordIndex = startIndex;
       taggingLines = new ArrayList<>();
-      taggingLines.add("map = word=0,answer=1\n");
+      taggingLines.add("map = word=0,answer=1");
 
       writer = new PrintWriter(tsvFile.getPath(), "UTF-8");
       JFrame taggingFrame = new JFrame("Manual Entity Tagger");
@@ -69,12 +68,10 @@ public class TrainingTagger
         @Override
         public void windowClosing(WindowEvent e)
         {
-          String taggingText = "";
           for (String line : taggingLines)
           {
-            taggingText += line;
+            writer.println(line);
           }
-          writer.print(taggingText);
           writer.close();
           System.out.println("Stopped at word index " + wordIndex);
         }
@@ -102,7 +99,7 @@ public class TrainingTagger
 
   private void buttonPressed(String entityClass)
   {
-    taggingLines.add(words[wordIndex] + "\t" + entityClass + "\n");
+    taggingLines.add(words[wordIndex] + "\t" + entityClass);
     showNextEntity();
   }
 
