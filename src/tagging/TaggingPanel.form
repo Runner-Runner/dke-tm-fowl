@@ -95,22 +95,22 @@
     </Component>
     <Component class="javax.swing.JButton" name="personButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Person"/>
+        <Property name="text" type="java.lang.String" value="PERSON"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="locationButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Location"/>
+        <Property name="text" type="java.lang.String" value="LOCATION"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="organizationButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="Organization"/>
+        <Property name="text" type="java.lang.String" value="ORGANIZATION"/>
       </Properties>
     </Component>
     <Component class="javax.swing.JButton" name="noneButton">
       <Properties>
-        <Property name="text" type="java.lang.String" value="None"/>
+        <Property name="text" type="java.lang.String" value="O"/>
       </Properties>
     </Component>
     <Container class="javax.swing.JScrollPane" name="jScrollPane1">

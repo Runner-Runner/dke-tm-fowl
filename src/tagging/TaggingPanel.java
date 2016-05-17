@@ -65,13 +65,13 @@ public class TaggingPanel extends javax.swing.JPanel
 
     jLabel3.setText("Entity:");
 
-    personButton.setText("Person");
+    personButton.setText("PERSON");
 
-    locationButton.setText("Location");
+    locationButton.setText("LOCATION");
 
-    organizationButton.setText("Organization");
+    organizationButton.setText("ORGANIZATION");
 
-    noneButton.setText("None");
+    noneButton.setText("O");
 
     contextTextarea.setColumns(20);
     contextTextarea.setLineWrap(true);

@@ -1,7 +1,6 @@
 package textminingtest;
 
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
-import edu.stanford.nlp.ie.crf.CRFClassifier;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
@@ -56,6 +55,7 @@ public class TextMiner
       Properties props = new Properties();
       props.setProperty("annotators", ANNOTATORS);
       props.setProperty("regexner.mapping", "regexner.txt");
+//      props.setProperty("ner.model", "edu/stanford/nlp/models/ner/english.conll.4class.distsim.crf.ser.gz");
 
       StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 
