@@ -7,7 +7,10 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,6 +20,7 @@ public class TrainingTagger
 {
   private ActionListener buttonListener;
 
+  private boolean outputExisted = false;
   private String[] words;
   private TaggingPanel taggingPanel;
 
@@ -53,11 +57,26 @@ public class TrainingTagger
     {
       File tsvFile = new File(fileName + "_tagged.tsv");
 
-      wordIndex = startIndex;
-      taggingLines = new ArrayList<>();
-      taggingLines.add("map = word=0,answer=1");
+      if (tsvFile.exists())
+      {
+        outputExisted = true;
+        //If tsv file exists, continue from last word
+        LineNumberReader lnr = new LineNumberReader(new FileReader(tsvFile));
+        lnr.skip(Long.MAX_VALUE);
+        wordIndex = lnr.getLineNumber() - 1;
+      }
+      else
+      {
+        wordIndex = startIndex;
+      }
 
-      writer = new PrintWriter(tsvFile.getPath(), "UTF-8");
+      taggingLines = new ArrayList<>();
+      if(!outputExisted)
+      {
+        taggingLines.add("map = word=0,answer=1");
+      }
+
+      writer = new PrintWriter(new FileWriter(tsvFile.getPath(), true));
       JFrame taggingFrame = new JFrame("Manual Entity Tagger");
       taggingFrame.setLayout(new GridLayout());
       taggingFrame.setSize(265, 375);
@@ -70,7 +89,7 @@ public class TrainingTagger
         {
           for (String line : taggingLines)
           {
-            writer.println(line);
+            writer.append(line+"\n");
           }
           writer.close();
           System.out.println("Stopped at word index " + wordIndex);
@@ -106,7 +125,7 @@ public class TrainingTagger
 
   private void showNextEntity()
   {
-    if(wordIndex >= words.length)
+    if (wordIndex >= words.length)
     {
       System.out.println("Text is fully tagged.");
       return;
