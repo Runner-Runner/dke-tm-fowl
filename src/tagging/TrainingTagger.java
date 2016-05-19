@@ -19,6 +19,7 @@ import javax.swing.JFrame;
 public class TrainingTagger
 {
   private ActionListener buttonListener;
+  private ActionListener undoButtonListener;
 
   private boolean outputExisted = false;
   private String[] words;
@@ -43,12 +44,27 @@ public class TrainingTagger
       }
     };
     taggingPanel.addActionListener(buttonListener);
+    undoButtonListener = new ActionListener()
+    {
+      @Override
+      public void actionPerformed(ActionEvent e)
+      {
+        int index = taggingLines.size() - 1;
+        if (index >= 0 && wordIndex >= 1)
+        {
+          taggingLines.remove(index);
+          wordIndex--;
+          showNextEntity();
+        }
+      }
+    };
+    taggingPanel.addUndoActionListener(undoButtonListener);
   }
 
   public static void main(String args[])
   {
     TrainingTagger trainingTagger = new TrainingTagger();
-    trainingTagger.start("data/ArtemisFowl1/chapters/clean/0-prologue.txt", 0);
+    trainingTagger.start("data/ArtemisFowl1/chapters/clean/1-the-book.txt", 0);
   }
 
   public void start(String fileName, int startIndex)

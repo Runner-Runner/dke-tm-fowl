@@ -89,6 +89,11 @@ public class TaggingPanel extends javax.swing.JPanel
     noneButton.addActionListener(listener);
   }
   
+  public void addUndoActionListener(ActionListener buttonListener)
+  {
+    undoButton.addActionListener(buttonListener);
+  }
+  
   /**
    * This method is called from within the constructor to initialize the form.
    * WARNING: Do NOT modify this code. The content of this method is always
@@ -109,6 +114,7 @@ public class TaggingPanel extends javax.swing.JPanel
     noneButton = new javax.swing.JButton();
     jScrollPane1 = new javax.swing.JScrollPane();
     contextTextarea = new javax.swing.JTextArea();
+    undoButton = new javax.swing.JButton();
 
     jLabel1.setFont(new java.awt.Font("Ubuntu", 0, 24)); // NOI18N
     jLabel1.setText("Manual Entity Tagger");
@@ -133,6 +139,8 @@ public class TaggingPanel extends javax.swing.JPanel
     contextTextarea.setWrapStyleWord(true);
     jScrollPane1.setViewportView(contextTextarea);
 
+    undoButton.setText("Undo");
+
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
     this.setLayout(layout);
     layout.setHorizontalGroup(
@@ -150,7 +158,8 @@ public class TaggingPanel extends javax.swing.JPanel
           .addComponent(noneButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
           .addComponent(organizationButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
           .addComponent(personButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(locationButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+          .addComponent(locationButton, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+          .addComponent(undoButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
     layout.setVerticalGroup(
@@ -174,7 +183,9 @@ public class TaggingPanel extends javax.swing.JPanel
         .addComponent(organizationButton)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(noneButton)
-        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 38, Short.MAX_VALUE)
+        .addComponent(undoButton)
+        .addContainerGap())
     );
   }// </editor-fold>//GEN-END:initComponents
 
@@ -190,5 +201,6 @@ public class TaggingPanel extends javax.swing.JPanel
   private javax.swing.JButton noneButton;
   private javax.swing.JButton organizationButton;
   private javax.swing.JButton personButton;
+  private javax.swing.JButton undoButton;
   // End of variables declaration//GEN-END:variables
 }
