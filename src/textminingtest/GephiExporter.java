@@ -12,7 +12,7 @@ public class GephiExporter {
 		PrintWriter nodewriter = new PrintWriter(name+"-nodes.csv", "UTF-8");
 		PrintWriter edgewriter = new PrintWriter(name+"-edges.csv", "UTF-8");
 		nodewriter.println("id,label,timeset,modularity_class");
-		edgewriter.println("Source,Target,Type,id,label,timeset,weight");
+		edgewriter.println("Source,Target,Type,id,label,timeset,weight,sentiment");
 		HashSet<Relation> visitedRelations= new HashSet<>();
 		int id = 0;
 		for(NamedEntity ne : entities){
@@ -21,7 +21,7 @@ public class GephiExporter {
 				if(visitedRelations.contains(r))
 					continue;
 				visitedRelations.add(r);
-				edgewriter.println(r.getEntity1().getId()+","+r.getEntity2().getId()+",Undirected,"+id+",,,"+r.getWeight());
+				edgewriter.println(r.getEntity1().getId()+","+r.getEntity2().getId()+",Undirected,"+id+",,,"+r.getWeight()+","+r.getSentiment());
 				id++;
 			}
 		}

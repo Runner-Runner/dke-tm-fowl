@@ -4,6 +4,7 @@ public class Relation {
   private NamedEntity entity1;
   private NamedEntity entity2;
   private int weight = 1;
+  private double sentiment = 0;
 
   private Relation(NamedEntity entity1, NamedEntity entity2)
   {
@@ -11,20 +12,30 @@ public class Relation {
     this.entity2 = entity2;
   }
   
-  public static Relation createRelation(NamedEntity entity1, NamedEntity entity2)
+  public static Relation createRelation(NamedEntity entity1, NamedEntity entity2, double sentiment)
   {
     Relation relation = new Relation(entity1, entity2);
+    relation.sentiment = sentiment;
     entity1.addRelation(entity2, relation);
     entity2.addRelation(entity1, relation);
     return relation;
   }
 
-  public void addWeight()
+  public void addWeight(double sentiment)
   {
-    weight++;
+	  this.sentiment+=sentiment;
+	  weight++;
   }
   
-  public NamedEntity getEntity1()
+  public double getSentiment() {
+	return sentiment;
+}
+
+public void setWeight(int weight) {
+	this.weight = weight;
+}
+
+public NamedEntity getEntity1()
   {
     return entity1;
   }
@@ -39,8 +50,9 @@ public class Relation {
     return weight;
   }
   
-  public void increase(int weight){
+  public void increase(int weight, double sentiment){
 	  this.weight+=weight;
+	  this.sentiment+=sentiment;
   }
   
   
