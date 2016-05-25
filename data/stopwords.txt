@@ -808,3 +808,21 @@ your
 
 yours
 
+answer
+
+reply
+
+true
+
+false
+
+dead
+
+alive
+
+usual
+
+respond
+
+main
+

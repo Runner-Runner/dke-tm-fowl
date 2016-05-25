@@ -31,6 +31,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
+import tagging.Statistic;
+import tagging.Statistics;
+
 //-Xms2048m
 public class TextMiner {
 	private String directory;
@@ -38,17 +41,16 @@ public class TextMiner {
 	private EntityManager entityManager;
 
 	private HashMap<Integer, String> corefIdMapping;
-	
+
 	private HashSet<String> stopwords;
 
 	private static final String ANNOTATORS = "tokenize, ssplit, pos, lemma, ner, regexner, parse, dcoref, sentiment";
 
 	private static final String ENTITY_TAG = "PERSON";
-	
+
 	private HashSet<String> doubleNames;
 	private HashMap<String, String> aliases;
-	
-	
+
 	public TextMiner() {
 		entityManager = new EntityManager();
 		corefIdMapping = new HashMap<>();
@@ -60,7 +62,7 @@ public class TextMiner {
 		doubleNames.add("Xuan Nguyen");
 		doubleNames.add("James Bond");
 		aliases = new HashMap<>();
-		//aliases.put(key, value)
+		// aliases.put(key, value)
 	}
 
 	public void setDirectory(String directory) {
@@ -76,14 +78,27 @@ public class TextMiner {
 				out = new PrintWriter(System.out);
 			}
 
+			File taggedFile = new File("data/tagged.txt");
+			HashMap<String, String> manualTaggedMapping = new HashMap<>();
+			if (taggedFile.exists()) {
+				BufferedReader reader = new BufferedReader(new FileReader(taggedFile));
+				String line;
+				while ((line = reader.readLine()) != null) {
+					String[] split = line.split("\t");
+					if (split.length == 2) {
+						manualTaggedMapping.put(split[0], split[1]);
+					}
+				}
+			}
+
 			Properties props = new Properties();
 			props.setProperty("annotators", ANNOTATORS);
 			props.setProperty("regexner.mapping", "data/regexner.txt");
-			//props.setProperty("ner.model","edu/stanford/nlp/models/ner/english.all.3class.caseless.distsim.crf.ser.gz");
-			//props.setProperty("sentiment.model","edu/stanford/nlp/models/sentiment/sentiment.binary.ser.gz");
+			// props.setProperty("ner.model","edu/stanford/nlp/models/ner/english.all.3class.caseless.distsim.crf.ser.gz");
+			// props.setProperty("sentiment.model","edu/stanford/nlp/models/sentiment/sentiment.binary.ser.gz");
 
 			StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-			
+
 			List<Annotation> fileAnnotations = new ArrayList<>();
 			if (directText != null) {
 				fileAnnotations.add(new Annotation(directText));
@@ -95,7 +110,11 @@ public class TextMiner {
 					fileAnnotations.add(new Annotation(fileText));
 				}
 			}
-			int relationRange = 5; //(sentences)
+
+			// Quality Measures
+			Statistics statistics = new Statistics();
+
+			int relationRange = 5; // (sentences)
 			int c = 0;
 			for (Annotation annotation : fileAnnotations) {
 				c++;
@@ -121,20 +140,32 @@ public class TextMiner {
 						for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
 							Integer corefClusterId = token.get(CorefClusterIdAnnotation.class);
 							String name = corefIdMapping.get(corefClusterId);
-							if(name!=null){
+							if (name != null) {
 								token.set(CoreAnnotations.TextAnnotation.class, name);
 								token.set(CoreAnnotations.LemmaAnnotation.class, name);
 							}
 							String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
+
+							String origWord = token.get(CoreAnnotations.TextAnnotation.class);
+
+							// Quality Measures
+							String entityClass = manualTaggedMapping.get(origWord);
+							if (entityClass != null) {
+								statistics.addData(namedEntityTag, entityClass, origWord);
+							}
+
 							String word = null;
 							if (ENTITY_TAG.equals(namedEntityTag)) {
-								word = token.get(CoreAnnotations.TextAnnotation.class);
-								//check for double name
-								if(lastPerson!=null){
-									String doubleName = lastPerson.get(CoreAnnotations.TextAnnotation.class)+" "+word;
-									if(doubleNames.contains(doubleName)){
-										token.set(CoreAnnotations.TextAnnotation.class, lastPerson.get(CoreAnnotations.TextAnnotation.class));
-										token.set(CoreAnnotations.LemmaAnnotation.class, lastPerson.get(CoreAnnotations.TextAnnotation.class));
+								word = origWord;
+								// check for double name
+								if (lastPerson != null) {
+									String doubleName = lastPerson.get(CoreAnnotations.TextAnnotation.class) + " "
+											+ word;
+									if (doubleNames.contains(doubleName)) {
+										token.set(CoreAnnotations.TextAnnotation.class,
+												lastPerson.get(CoreAnnotations.TextAnnotation.class));
+										token.set(CoreAnnotations.LemmaAnnotation.class,
+												lastPerson.get(CoreAnnotations.TextAnnotation.class));
 									}
 								}
 								if (corefClusterId != null && name == null) {
@@ -149,35 +180,35 @@ public class TextMiner {
 							if (word != null) {
 								personNamesInSentence.add(word);
 							}
-							
+
 						}
 						// get sentiment
 						Tree tree = sentence.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
-						//tree.pennPrint();
+						// tree.pennPrint();
 						double sentenceScore = RNNCoreAnnotations.getPredictedClass(tree);
-						
-						
+
 						entityManager.addEntities(personNamesInSentence);
 						HashSet<String> alreadyChecked = new HashSet<String>();
 						double gamma = 1;
-						
-						//update names before
+
+						// update names before
 						namesBefore.addFirst(personNamesInSentence);
 						sentimentScores.addFirst(sentenceScore);
-						allSentimentScore+=sentenceScore;
-						if(namesBefore.size()>relationRange){
+						allSentimentScore += sentenceScore;
+						if (namesBefore.size() > relationRange) {
 							namesBefore.removeLast();
-							allSentimentScore-=sentimentScores.removeLast();
+							allSentimentScore -= sentimentScores.removeLast();
 						}
-						
-						for(String personOne:personNamesInSentence){
+
+						for (String personOne : personNamesInSentence) {
 							alreadyChecked.add(personOne);
 							// sentences before
-							for(HashSet<String> sentenceBefore: namesBefore){
-								gamma*=0.8;
-								for(String personTwo: sentenceBefore){
-									if(!personOne.equals(personTwo)){
-										entityManager.increaseRelation(personOne, personTwo, (allSentimentScore/sentences.size())*gamma);
+							for (HashSet<String> sentenceBefore : namesBefore) {
+								gamma *= 0.8;
+								for (String personTwo : sentenceBefore) {
+									if (!personOne.equals(personTwo)) {
+										entityManager.increaseRelation(personOne, personTwo,
+												(allSentimentScore / sentences.size()) * gamma);
 									}
 								}
 							}
@@ -192,21 +223,23 @@ public class TextMiner {
 
 			IOUtils.closeIgnoringExceptions(out);
 
+			statistics.writeToFile();
+
 			GephiExporter.exportCSV(entityManager.getEntities().values(), "test");
 			WekaParser.entitiesToWeka(entityManager.getEntities().values(), "test");
 			PrintWriter pw = new PrintWriter("test-descriptors.txt", "UTF-8");
 			// print person descriptors
-			for(NamedEntity ne : entityManager.getEntities().values()){
+			for (NamedEntity ne : entityManager.getEntities().values()) {
 				pw.println(ne.getName());
-				for(String s:ne.getDescriptors()){
-					pw.println("\t"+s);
+				for (String s : ne.getDescriptors()) {
+					pw.println("\t" + s);
 				}
 			}
 			// print relation descriptors
-			for(Relation r:entityManager.getRelations()){
-				pw.println(r.getEntity1().getName()+" <-> "+r.getEntity2().getName());
-				for(String s:r.getDescriptors()){
-					pw.println("\t"+s);
+			for (Relation r : entityManager.getRelations()) {
+				pw.println(r.getEntity1().getName() + " <-> " + r.getEntity2().getName());
+				for (String s : r.getDescriptors()) {
+					pw.println("\t" + s);
 				}
 			}
 			pw.close();
@@ -216,6 +249,7 @@ public class TextMiner {
 		}
 
 	}
+
 	private void checkDependencies(CoreMap sentence) {
 		Tree tree = sentence.get(TreeAnnotation.class);
 		// Get dependency tree
@@ -223,11 +257,12 @@ public class TextMiner {
 		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
 		GrammaticalStructure gs = gsf.newGrammaticalStructure(tree);
 		Collection<TypedDependency> td = gs.typedDependenciesCollapsed();
-		System.out.println(td);
+
+		// System.out.println(td);
 
 		Object[] list = td.toArray();
 		TypedDependency typedDependency;
-		HashMap<String,List<NamedEntity>> relationMapping = new HashMap<>();
+		HashMap<String, List<NamedEntity>> relationMapping = new HashMap<>();
 		HashMap<String, NamedEntity> adjectives = new HashMap<>();
 		HashSet<String> neg = new HashSet<String>();
 		for (Object object : list) {
@@ -237,45 +272,49 @@ public class TextMiner {
 			String secondTag = typedDependency.gov().tag();
 			String secondDep = typedDependency.gov().lemma();
 			String rel = typedDependency.reln().getShortName();
-			if(rel.equals("neg")){
+			if (rel.equals("neg")) {
 				neg.add(firstDep);
 				neg.add(secondDep);
 			}
 			NamedEntity one = entityManager.getEntity(firstDep);
 			NamedEntity two = entityManager.getEntity(secondDep);
-			if(one == null && two!=null && firstDep!=null /*&& !stopwords.contains(firstDep)*/){
-				if(firstTag.startsWith("J"))
+			if (one == null && two != null
+					&& firstDep != null /* && !stopwords.contains(firstDep) */) {
+				if (firstTag.startsWith("J"))
 					adjectives.put(firstDep, two);
-				else if(firstTag.startsWith("VB")){
+				else if (firstTag.startsWith("VB")) {
 					List<NamedEntity> mapped = relationMapping.get(firstDep);
-					if(mapped == null){
-						mapped = new ArrayList<NamedEntity>();
+					if (mapped == null) {
+						mapped = new ArrayList<>();
 						relationMapping.put(firstDep, mapped);
 					}
-					if(!mapped.contains(two))
+
+					if (!mapped.contains(two)) {
 						mapped.add(two);
+					}
 				}
-			}
-			else if(one != null && two==null && secondDep!=null/* && !stopwords.contains(secondDep)*/){
-				if(secondTag.startsWith("J"))
+			} else if (one != null && two == null
+					&& secondDep != null/* && !stopwords.contains(secondDep) */) {
+				if (secondTag.startsWith("J"))
 					adjectives.put(secondDep, one);
-				else if(secondTag.startsWith("VB")){
+				else if (secondTag.startsWith("VB")) {
 					List<NamedEntity> mapped = relationMapping.get(secondDep);
-					if(mapped == null){
+					if (mapped == null) {
 						mapped = new ArrayList<NamedEntity>();
 						relationMapping.put(secondDep, mapped);
 					}
-					if(!mapped.contains(one))
+					if (!mapped.contains(one)) {
 						mapped.add(one);
+					}
 				}
 			}
 		}
-		for(Entry<String,NamedEntity> entry:adjectives.entrySet()){
-			if(!neg.contains(entry.getKey()))
+		for (Entry<String, NamedEntity> entry : adjectives.entrySet()) {
+			if (!neg.contains(entry.getKey()))
 				entry.getValue().addDescriptor(entry.getKey());
 		}
-		for(Entry<String, List<NamedEntity>> entry: relationMapping.entrySet()){
-			if(!neg.contains(entry.getKey())&&entry.getValue().size()>1){
+		for (Entry<String, List<NamedEntity>> entry : relationMapping.entrySet()) {
+			if (!neg.contains(entry.getKey()) && entry.getValue().size() > 1) {
 				System.out.println(entry.getValue().get(0).getName());
 				System.out.println(entry.getValue().get(1).getName());
 				System.out.println(entry.getKey());
@@ -284,15 +323,14 @@ public class TextMiner {
 		}
 	}
 
-	private HashSet<String> mapPersons(List<String> entityNames){
+	private HashSet<String> mapPersons(List<String> entityNames) {
 		HashSet<String> persons = new HashSet<>();
 		String before = null;
-		for(String name: entityNames){
-			if(doubleNames.contains(before+" "+name)){
+		for (String name : entityNames) {
+			if (doubleNames.contains(before + " " + name)) {
 				continue;
-			}
-			else{
-				if(aliases.get(name)!=null)
+			} else {
+				if (aliases.get(name) != null)
 					name = aliases.get(name);
 				persons.add(name);
 				before = name;
@@ -300,26 +338,21 @@ public class TextMiner {
 		}
 		return persons;
 	}
-	
-	public static HashSet<String> readStopwords(String path)
-	  {
-	    HashSet<String> stopwords = new HashSet<String>();
-	    BufferedReader br = null;
-	    try
-	    {
-	      br = new BufferedReader(new FileReader(path));
-	      String line = br.readLine();
-	      while (line != null)
-	      {
-	        stopwords.add(line.trim());
-	        line = br.readLine();
-	      }
-	      br.close();
-	    }
-	    catch (Exception e)
-	    {
-	      System.out.println("Stopwords could not be read.");
-	    }
-	    return stopwords;
-	  }
+
+	public static HashSet<String> readStopwords(String path) {
+		HashSet<String> stopwords = new HashSet<String>();
+		BufferedReader br = null;
+		try {
+			br = new BufferedReader(new FileReader(path));
+			String line = br.readLine();
+			while (line != null) {
+				stopwords.add(line.trim());
+				line = br.readLine();
+			}
+			br.close();
+		} catch (Exception e) {
+			System.out.println("Stopwords could not be read.");
+		}
+		return stopwords;
+	}
 }
