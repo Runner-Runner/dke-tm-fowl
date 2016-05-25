@@ -1,6 +1,8 @@
 package textminingtest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class NamedEntity
 {
@@ -9,7 +11,7 @@ public class NamedEntity
   private int modularityClass;
   private int id;
   private static int entityCount = 0;
-  
+  private ArrayList<String> descriptors;
   private HashMap<NamedEntity, Relation> relationMap;
   
   public NamedEntity(String name)
@@ -17,6 +19,7 @@ public class NamedEntity
 	this.id = ++entityCount;
     this.name = name;
     relationMap = new HashMap<>();
+    descriptors = new ArrayList<>();
   }
   
   public static int getEntityCount() {
@@ -62,5 +65,13 @@ public void addRelation(NamedEntity otherEntity, Relation relation)
   
 	public boolean equals(NamedEntity obj) {
 		return name.equals(name);
+	}
+
+	public void addDescriptors(ArrayList<String> descriptors) {
+		this.descriptors.addAll(descriptors);
+	}
+
+	public ArrayList<String> getDescriptors() {
+		return descriptors;
 	}
 }

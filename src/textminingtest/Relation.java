@@ -1,8 +1,12 @@
 package textminingtest;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Relation {
   private NamedEntity entity1;
   private NamedEntity entity2;
+  private ArrayList<String> descriptors;
   private int weight = 1;
   private double sentiment = 0;
 
@@ -10,6 +14,7 @@ public class Relation {
   {
     this.entity1 = entity1;
     this.entity2 = entity2;
+    this.descriptors = new ArrayList<>();
   }
   
   public static Relation createRelation(NamedEntity entity1, NamedEntity entity2, double sentiment)
@@ -29,6 +34,10 @@ public class Relation {
   
   public double getSentiment() {
 	return sentiment;
+}
+
+public ArrayList<String> getDescriptors() {
+	return descriptors;
 }
 
 public void setWeight(int weight) {
@@ -53,6 +62,9 @@ public NamedEntity getEntity1()
   public void increase(int weight, double sentiment){
 	  this.weight+=weight;
 	  this.sentiment+=sentiment;
+  }
+  public void addDescriptors(List<String> descriptors){
+	  this.descriptors.addAll(descriptors);
   }
   
   

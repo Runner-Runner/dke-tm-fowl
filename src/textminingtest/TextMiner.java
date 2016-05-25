@@ -67,7 +67,7 @@ public class TextMiner {
 					fileAnnotations.add(new Annotation(fileText));
 				}
 			}
-			int relationRange = 3; //(sentences)
+			int relationRange = 5; //(sentences)
 			int c = 0;
 			for (Annotation annotation : fileAnnotations) {
 				c++;
@@ -88,11 +88,13 @@ public class TextMiner {
 					// iterate sentences
 					for (CoreMap sentence : sentences) {
 						HashSet<String> personNamesInSentence = new HashSet<String>();
+						ArrayList<String> personDescriptors = new ArrayList<String>();
+						ArrayList<String> relationDescriptors = new ArrayList<>();
 						// find name entities
 						for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
 							Integer corefClusterId = token.get(CorefClusterIdAnnotation.class);
 							String name = corefIdMapping.get(corefClusterId);
-
+							
 							String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
 							String word = null;
 							if (ENTITY_TAG.equals(namedEntityTag)) {
@@ -108,31 +110,56 @@ public class TextMiner {
 							if (word != null) {
 								personNamesInSentence.add(word);
 							}
-
+							String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
+							//adjectivs
+							if(pos.startsWith("J")){
+								personDescriptors.add(token.get(CoreAnnotations.LemmaAnnotation.class));
+							}
+							// verbs and adverbs
+							else if(pos.startsWith("V") || pos.startsWith("RB")){
+								relationDescriptors.add(token.get(CoreAnnotations.LemmaAnnotation.class));
+							}
 						}
 						// get sentiment
 						Tree tree = sentence.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
+						//tree.pennPrint();
 						double sentenceScore = RNNCoreAnnotations.getPredictedClass(tree);
 						
+						
+						HashSet<String> alreadyChecked = new HashSet<String>();
+						double gamma = 1;
+						for(String personOne:personNamesInSentence){
+							//same sentences
+							if(personNamesInSentence.size()==1)
+								entityManager.addDescriptor(personOne, personDescriptors);
+							else{
+								alreadyChecked.add(personOne);
+								for(String personTwo:personNamesInSentence){
+									if(!alreadyChecked.contains(personTwo)){
+										Relation relation = entityManager.increaseRelation(personOne, personTwo, allSentimentScore/sentences.size());
+										relation.addDescriptors(relationDescriptors);
+									}
+								}
+							}
+							gamma = 1;
+							// sentences before
+							for(HashSet<String> sentenceBefore: namesBefore){
+								gamma*=0.8;
+								for(String personTwo: sentenceBefore){
+									if(!personOne.equals(personTwo)){
+										entityManager.increaseRelation(personOne, personTwo, (allSentimentScore/sentences.size())*gamma);
+									}
+								}
+							}
+						}
+						// update names before
 						namesBefore.addFirst(personNamesInSentence);
 						sentimentScores.addFirst(sentenceScore);
 						allSentimentScore+=sentenceScore;
 						
-						if(namesBefore.size()>relationRange){
+						if(namesBefore.size()>=relationRange){
 							namesBefore.removeLast();
 							allSentimentScore-=sentimentScores.removeLast();
-						}
-						HashSet<String> alreadyChecked = new HashSet<String>();
-						for(String personOne:personNamesInSentence){
-							alreadyChecked.add(personOne);
-							for(HashSet<String> sentenceBefore: namesBefore){
-								for(String personTwo: sentenceBefore){
-									if(!alreadyChecked.contains(personTwo)){
-										entityManager.increaseRelation(personOne, personTwo, allSentimentScore/sentences.size());
-									}
-								}
-									
-							}
 						}
 					}
 				}
@@ -145,6 +172,22 @@ public class TextMiner {
 
 			GephiExporter.exportCSV(entityManager.getEntities().values(), "test");
 			WekaParser.entitiesToWeka(entityManager.getEntities().values(), "test");
+			PrintWriter pw = new PrintWriter("test-descriptors.txt", "UTF-8");
+			// print person descriptors
+			for(NamedEntity ne : entityManager.getEntities().values()){
+				pw.println(ne.getName());
+				for(String s:ne.getDescriptors()){
+					pw.println("\t"+s);
+				}
+			}
+			// print relation descriptors
+			for(Relation r:entityManager.getRelations()){
+				pw.println(r.getEntity1().getName()+" <-> "+r.getEntity2().getName());
+				for(String s:r.getDescriptors()){
+					pw.println("\t"+s);
+				}
+			}
+			pw.close();
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			System.out.println(ex.getMessage());

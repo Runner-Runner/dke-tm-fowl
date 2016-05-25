@@ -1,44 +1,57 @@
 package textminingtest;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class EntityManager
 {
   private HashMap<String, NamedEntity> entities;
+  private HashSet<Relation> relations;
 
   public EntityManager()
   {
     entities = new HashMap<>();
+    relations = new HashSet<>();
   }
   
-  public void increaseRelation(String entityName1, String entityName2, double sentiment)
+  public void addDescriptor(String ne, ArrayList<String> descriptors){
+	 getNamedEntity(ne).addDescriptors(descriptors);
+  }
+  
+  private NamedEntity getNamedEntity(String name){
+	  NamedEntity entity = entities.get(name);
+	    if(entity == null)
+	    {
+	      entity = new NamedEntity(name);
+	      entities.put(name, entity);
+	    }
+	    return entity;
+  }
+  public Relation increaseRelation(String entityName1, String entityName2, double sentiment)
   {
-    NamedEntity entity1 = entities.get(entityName1);
-    if(entity1 == null)
-    {
-      entity1 = new NamedEntity(entityName1);
-      entities.put(entityName1, entity1);
-    }
+    NamedEntity entity1 = getNamedEntity(entityName1);
     
-    NamedEntity entity2 = entities.get(entityName2);
-    if(entity2 == null)
-    {
-      entity2 = new NamedEntity(entityName2);
-      entities.put(entityName2, entity2);
-    }
+    NamedEntity entity2 = getNamedEntity(entityName2);
     
     Relation relation = entity1.getRelation(entity2);
     if(relation == null)
     {
-      Relation.createRelation(entity1, entity2, sentiment);
+      relation = Relation.createRelation(entity1, entity2, sentiment);
+      relations.add(relation);
     }
     else
     {
       relation.addWeight(sentiment);
     }
+    return relation;
   }
 
-  public HashMap<String, NamedEntity> getEntities()
+  public HashSet<Relation> getRelations() {
+	return relations;
+}
+
+public HashMap<String, NamedEntity> getEntities()
   {
     return entities;
   }
