@@ -257,7 +257,6 @@ public class TextMiner {
 		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
 		GrammaticalStructure gs = gsf.newGrammaticalStructure(tree);
 		Collection<TypedDependency> td = gs.typedDependenciesCollapsed();
-		//System.out.println(td);
 
 		Object[] list = td.toArray();
 		TypedDependency typedDependency;
@@ -283,10 +282,13 @@ public class TextMiner {
 				else if(firstTag.startsWith("VB")){
 					List<NamedEntity> mapped = relationMapping.get(firstDep);
 					if(mapped == null){
-						mapped = new ArrayList<NamedEntity>();
+						mapped = new ArrayList<>();
 						relationMapping.put(firstDep, mapped);
 					}
-					mapped.add(two);
+          if(!mapped.contains(two))
+          {
+            mapped.add(two);
+          }
 				}
 			}
 			else if(one != null && two==null && secondDep!=null/* && !stopwords.contains(secondDep)*/){
@@ -298,7 +300,10 @@ public class TextMiner {
 						mapped = new ArrayList<NamedEntity>();
 						relationMapping.put(secondDep, mapped);
 					}
-					mapped.add(one);
+          if(!mapped.contains(one))
+          {
+            mapped.add(one);
+          }
 				}
 			}
 		}
