@@ -15,8 +15,6 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Properties;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -39,22 +37,6 @@ public class TextMiningTest
     textMiner.setDirectory("data/ArtemisFowl1/chapters/clean");
     textMiner.mineText(false, null);
 //    textMiner.mineText(true, "Because John is tall. He talks to David.");
-  }
-  
-  
-  
-  public static void test3()
-  {
-    try
-    {
-      String[] args = {"SmallTest.txt", "testOutput/Output1.txt", "testOutput/XmlOutput2.xml"};
-//      String[] args = {};
-      StanfordCoreNlpDemoModified.execute(args);
-    }
-    catch (IOException ex)
-    {
-      Logger.getLogger(TextMiningTest.class.getName()).log(Level.SEVERE, null, ex);
-    }
   }
   
   public static void test2()
