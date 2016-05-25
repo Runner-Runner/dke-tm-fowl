@@ -50,7 +50,16 @@ public class EntityManager
   public HashSet<Relation> getRelations() {
 	return relations;
 }
-
+  public void addEntities(HashSet<String> names){
+	  for(String name:names){
+		  NamedEntity ne = entities.get(name);
+		  if(ne==null)
+			  entities.put(name, new NamedEntity(name));
+	  }
+  }
+public NamedEntity getEntity(String name){
+	return entities.get(name);
+}
 public HashMap<String, NamedEntity> getEntities()
   {
     return entities;
