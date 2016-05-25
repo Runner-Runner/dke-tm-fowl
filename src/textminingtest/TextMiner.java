@@ -78,6 +78,22 @@ public class TextMiner {
 				out = new PrintWriter(System.out);
 			}
 
+      File taggedFile = new File("data/tagged.txt");
+      HashMap<String, String> manualTaggedMapping = new HashMap<>();
+      if (taggedFile.exists())
+      {
+        BufferedReader reader = new BufferedReader(new FileReader(taggedFile));
+        String line;
+        while ((line = reader.readLine()) != null)
+        {
+          String[] split = line.split("\t");
+          if (split.length == 2)
+          {
+            manualTaggedMapping.put(split[0], split[1]);
+          }
+        }
+      }
+      
 			Properties props = new Properties();
 			props.setProperty("annotators", ANNOTATORS);
 			props.setProperty("regexner.mapping", "data/regexner.txt");
@@ -97,6 +113,10 @@ public class TextMiner {
 					fileAnnotations.add(new Annotation(fileText));
 				}
 			}
+      
+      //Quality Measures
+      Statistics statistics = new Statistics();
+      
 			int relationRange = 5; //(sentences)
 			int c = 0;
 			for (Annotation annotation : fileAnnotations) {
@@ -128,9 +148,19 @@ public class TextMiner {
 								token.set(CoreAnnotations.LemmaAnnotation.class, name);
 							}
 							String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
-							String word = null;
+							
+              String origWord = token.get(CoreAnnotations.TextAnnotation.class);
+
+              //Quality Measures
+              String entityClass = manualTaggedMapping.get(origWord);
+              if(entityClass != null)
+              {
+                statistics.addData(namedEntityTag, entityClass, origWord);
+              }
+              
+              String word = null;
 							if (ENTITY_TAG.equals(namedEntityTag)) {
-								word = token.get(CoreAnnotations.TextAnnotation.class);
+								word = origWord;
 								//check for double name
 								if(lastPerson!=null){
 									String doubleName = lastPerson.get(CoreAnnotations.TextAnnotation.class)+" "+word;
@@ -194,6 +224,8 @@ public class TextMiner {
 
 			IOUtils.closeIgnoringExceptions(out);
 
+      statistics.writeToFile();
+      
 			GephiExporter.exportCSV(entityManager.getEntities().values(), "test");
 			WekaParser.entitiesToWeka(entityManager.getEntities().values(), "test");
 			PrintWriter pw = new PrintWriter("test-descriptors.txt", "UTF-8");
