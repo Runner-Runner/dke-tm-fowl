@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.swing.JFrame;
 
 public class TrainingTagger
@@ -25,14 +27,20 @@ public class TrainingTagger
   private String[] words;
   private TaggingPanel taggingPanel;
 
+  private int lastWordIndex;
+  
   private int wordIndex;
 
   private PrintWriter writer;
 
   private List<String> taggingLines;
 
+  private Set<String> alreadyNamed;
+  
   public TrainingTagger()
   {
+    alreadyNamed = new HashSet<>();
+    
     taggingPanel = new TaggingPanel();
     buttonListener = new ActionListener()
     {
@@ -53,7 +61,8 @@ public class TrainingTagger
         if (index >= 0 && wordIndex >= 1)
         {
           taggingLines.remove(index);
-          wordIndex--;
+          wordIndex = lastWordIndex;
+          alreadyNamed.remove(words[lastWordIndex]);
           showNextEntity();
         }
       }
@@ -64,7 +73,7 @@ public class TrainingTagger
   public static void main(String args[])
   {
     TrainingTagger trainingTagger = new TrainingTagger();
-    trainingTagger.start("data/ArtemisFowl1/chapters/clean/1-the-book.txt", 0);
+    trainingTagger.start("data/ArtemisFowl1/chapters/clean/combined/combi.txt", 0);
   }
 
   public void start(String fileName, int startIndex)
@@ -87,7 +96,7 @@ public class TrainingTagger
       }
 
       taggingLines = new ArrayList<>();
-      if(!outputExisted)
+      if (!outputExisted)
       {
         taggingLines.add("map = word=0,answer=1");
       }
@@ -105,7 +114,7 @@ public class TrainingTagger
         {
           for (String line : taggingLines)
           {
-            writer.append(line+"\n");
+            writer.append(line + "\n");
           }
           writer.close();
           System.out.println("Stopped at word index " + wordIndex);
@@ -135,6 +144,8 @@ public class TrainingTagger
   private void buttonPressed(String entityClass)
   {
     taggingLines.add(words[wordIndex] + "\t" + entityClass);
+    alreadyNamed.add(words[wordIndex]);
+    lastWordIndex = wordIndex;
     wordIndex++;
     showNextEntity();
   }
@@ -145,6 +156,23 @@ public class TrainingTagger
     {
       System.out.println("Text is fully tagged.");
       return;
+    }
+
+    while (!Character.isUpperCase(words[wordIndex].charAt(0)) || alreadyNamed.contains(words[wordIndex]))
+    {
+      if(!alreadyNamed.contains(words[wordIndex]))
+      {
+        taggingLines.add(words[wordIndex] + "\t" + "O");
+        alreadyNamed.add(words[wordIndex]);
+      }
+      
+      wordIndex++;
+      
+      if (wordIndex >= words.length)
+      {
+        System.out.println("Text is fully tagged.");
+        return;
+      }
     }
 
     String word = words[wordIndex].trim();
