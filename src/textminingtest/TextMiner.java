@@ -83,7 +83,7 @@ public class TextMiner {
 			//props.setProperty("sentiment.model","edu/stanford/nlp/models/sentiment/sentiment.binary.ser.gz");
 
 			StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
-
+			
 			List<Annotation> fileAnnotations = new ArrayList<>();
 			if (directText != null) {
 				fileAnnotations.add(new Annotation(directText));
@@ -223,7 +223,7 @@ public class TextMiner {
 		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
 		GrammaticalStructure gs = gsf.newGrammaticalStructure(tree);
 		Collection<TypedDependency> td = gs.typedDependenciesCollapsed();
-		//System.out.println(td);
+		System.out.println(td);
 
 		Object[] list = td.toArray();
 		TypedDependency typedDependency;
@@ -252,7 +252,8 @@ public class TextMiner {
 						mapped = new ArrayList<NamedEntity>();
 						relationMapping.put(firstDep, mapped);
 					}
-					mapped.add(two);
+					if(!mapped.contains(two))
+						mapped.add(two);
 				}
 			}
 			else if(one != null && two==null && secondDep!=null/* && !stopwords.contains(secondDep)*/){
@@ -264,7 +265,8 @@ public class TextMiner {
 						mapped = new ArrayList<NamedEntity>();
 						relationMapping.put(secondDep, mapped);
 					}
-					mapped.add(one);
+					if(!mapped.contains(one))
+						mapped.add(one);
 				}
 			}
 		}
@@ -274,6 +276,9 @@ public class TextMiner {
 		}
 		for(Entry<String, List<NamedEntity>> entry: relationMapping.entrySet()){
 			if(!neg.contains(entry.getKey())&&entry.getValue().size()>1){
+				System.out.println(entry.getValue().get(0).getName());
+				System.out.println(entry.getValue().get(1).getName());
+				System.out.println(entry.getKey());
 				entry.getValue().get(0).getRelation(entry.getValue().get(1)).addDescriptor(entry.getKey());
 			}
 		}
