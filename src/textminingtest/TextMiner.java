@@ -10,7 +10,10 @@ import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +28,8 @@ public class TextMiner {
 	private EntityManager entityManager;
 
 	private HashMap<Integer, String> corefIdMapping;
+	
+	private HashSet<String> stopwords;
 
 	private static final String ANNOTATORS = "tokenize, ssplit, pos, lemma, ner, regexner, parse, dcoref, sentiment";
 
@@ -33,6 +38,7 @@ public class TextMiner {
 	public TextMiner() {
 		entityManager = new EntityManager();
 		corefIdMapping = new HashMap<>();
+		stopwords = readStopwords("data/stopwords.txt");
 	}
 
 	public void setDirectory(String directory) {
@@ -113,11 +119,15 @@ public class TextMiner {
 							String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
 							//adjectivs
 							if(pos.startsWith("J")){
-								personDescriptors.add(token.get(CoreAnnotations.LemmaAnnotation.class));
+								String descriptor = token.get(CoreAnnotations.LemmaAnnotation.class);
+								if(!stopwords.contains(descriptor))
+									personDescriptors.add(descriptor);
 							}
 							// verbs and adverbs
 							else if(pos.startsWith("V") || pos.startsWith("RB")){
-								relationDescriptors.add(token.get(CoreAnnotations.LemmaAnnotation.class));
+								String descriptor = token.get(CoreAnnotations.LemmaAnnotation.class);
+								if(!stopwords.contains(descriptor))
+									relationDescriptors.add(descriptor);
 							}
 						}
 						// get sentiment
@@ -194,4 +204,25 @@ public class TextMiner {
 		}
 
 	}
+	public static HashSet<String> readStopwords(String path)
+	  {
+	    HashSet<String> stopwords = new HashSet<String>();
+	    BufferedReader br = null;
+	    try
+	    {
+	      br = new BufferedReader(new FileReader(path));
+	      String line = br.readLine();
+	      while (line != null)
+	      {
+	        stopwords.add(line.trim());
+	        line = br.readLine();
+	      }
+	      br.close();
+	    }
+	    catch (Exception e)
+	    {
+	      System.out.println("Stopwords could not be read.");
+	    }
+	    return stopwords;
+	  }
 }
