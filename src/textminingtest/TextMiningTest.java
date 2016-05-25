@@ -34,9 +34,9 @@ public class TextMiningTest
   public static void test4()
   {
     TextMiner textMiner = new TextMiner();
-    textMiner.setDirectory("data/examples");
-    //textMiner.mineText(false, null);
-   textMiner.mineText(true, "Because John is tall. He doesn't talk to David. John likes David. Artemis Fowl is criminal. He kills David.");
+    textMiner.setDirectory("data/all");
+    textMiner.mineText(false, null);
+//   textMiner.mineText(true, "John likes David. Artemis Miller is criminal. He kills David.");
   }
   
   public static void test2()

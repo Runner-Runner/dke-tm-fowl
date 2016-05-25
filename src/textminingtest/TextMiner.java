@@ -3,7 +3,6 @@ package textminingtest;
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
-import edu.stanford.nlp.ling.CoreAnnotations.LastTaggedAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
@@ -17,7 +16,6 @@ import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
 import edu.stanford.nlp.trees.TreebankLanguagePack;
 import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
-import edu.stanford.nlp.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,7 +29,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Properties;
-import tagging.Statistic;
 import tagging.Statistics;
 
 //-Xms2048m
@@ -187,8 +184,14 @@ public class TextMiner {
 						// get sentiment
 						Tree tree = sentence.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
 						// tree.pennPrint();
-						double sentenceScore = RNNCoreAnnotations.getPredictedClass(tree);
+						
+            // 0 = very negative, 1 = negative, 2 = neutral,
+            // 3 = positive, 4 = very positive.
+            double sentenceScore = RNNCoreAnnotations.getPredictedClass(tree);
 
+            //TODO enter
+            String aasd = sentence.get(CoreAnnotations.TextAnnotation.class);
+            
 						entityManager.addEntities(personNamesInSentence);
 						HashSet<String> alreadyChecked = new HashSet<String>();
 						double gamma = 1;
@@ -210,7 +213,7 @@ public class TextMiner {
 								for (String personTwo : sentenceBefore) {
 									if (!personOne.equals(personTwo)) {
 										entityManager.increaseRelation(personOne, personTwo,
-												(allSentimentScore / sentences.size()) * gamma);
+												sentenceScore);
 									}
 								}
 							}

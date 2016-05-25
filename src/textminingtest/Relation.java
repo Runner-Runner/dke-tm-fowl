@@ -8,19 +8,20 @@ public class Relation {
   private NamedEntity entity2;
   private ArrayList<String> descriptors;
   private int weight = 1;
-  private double sentiment = 0;
+  private List<Double> sentiments;
 
   private Relation(NamedEntity entity1, NamedEntity entity2)
   {
     this.entity1 = entity1;
     this.entity2 = entity2;
     this.descriptors = new ArrayList<>();
+    sentiments = new ArrayList<>();
   }
   
   public static Relation createRelation(NamedEntity entity1, NamedEntity entity2, double sentiment)
   {
     Relation relation = new Relation(entity1, entity2);
-    relation.sentiment = sentiment;
+    relation.sentiments.add(sentiment);
     entity1.addRelation(entity2, relation);
     entity2.addRelation(entity1, relation);
     return relation;
@@ -28,12 +29,17 @@ public class Relation {
 
   public void addWeight(double sentiment)
   {
-	  this.sentiment+=sentiment;
+	  sentiments.add(sentiment);
 	  weight++;
   }
   
   public double getSentiment() {
-	return sentiment;
+    double sentimentSum = 0;
+    for(Double sentiment : sentiments)
+    {
+      sentimentSum += sentiment;
+    }
+    return sentimentSum/sentiments.size();
 }
 
 public ArrayList<String> getDescriptors() {
@@ -61,7 +67,7 @@ public NamedEntity getEntity1()
   
   public void increase(int weight, double sentiment){
 	  this.weight+=weight;
-	  this.sentiment+=sentiment;
+	  sentiments.add(sentiment);
   }
   public void addDescriptors(List<String> descriptors){
 	  this.descriptors.addAll(descriptors);
