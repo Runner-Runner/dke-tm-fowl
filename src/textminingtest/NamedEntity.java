@@ -70,7 +70,9 @@ public void addRelation(NamedEntity otherEntity, Relation relation)
 	public void addDescriptors(ArrayList<String> descriptors) {
 		this.descriptors.addAll(descriptors);
 	}
-
+	public void addDescriptor(String descriptor){
+		this.descriptors.add(descriptor);
+	}
 	public ArrayList<String> getDescriptors() {
 		return descriptors;
 	}

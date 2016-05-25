@@ -66,6 +66,9 @@ public NamedEntity getEntity1()
   public void addDescriptors(List<String> descriptors){
 	  this.descriptors.addAll(descriptors);
   }
+  public void addDescriptor(String descriptor){
+	  this.descriptors.add(descriptor);
+  }
   
   
 }

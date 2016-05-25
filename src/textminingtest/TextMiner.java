@@ -3,23 +3,33 @@ package textminingtest;
 import edu.stanford.nlp.hcoref.CorefCoreAnnotations.CorefClusterIdAnnotation;
 import edu.stanford.nlp.io.IOUtils;
 import edu.stanford.nlp.ling.CoreAnnotations;
+import edu.stanford.nlp.ling.CoreAnnotations.LastTaggedAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.GrammaticalStructureFactory;
+import edu.stanford.nlp.trees.PennTreebankLanguagePack;
 import edu.stanford.nlp.trees.Tree;
+import edu.stanford.nlp.trees.TreeCoreAnnotations.TreeAnnotation;
+import edu.stanford.nlp.trees.TreebankLanguagePack;
+import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
+import edu.stanford.nlp.util.Pair;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Properties;
 //-Xms2048m
 public class TextMiner {
@@ -34,11 +44,23 @@ public class TextMiner {
 	private static final String ANNOTATORS = "tokenize, ssplit, pos, lemma, ner, regexner, parse, dcoref, sentiment";
 
 	private static final String ENTITY_TAG = "PERSON";
-
+	
+	private HashSet<String> doubleNames;
+	private HashMap<String, String> aliases;
+	
+	
 	public TextMiner() {
 		entityManager = new EntityManager();
 		corefIdMapping = new HashMap<>();
 		stopwords = readStopwords("data/stopwords.txt");
+		doubleNames = new HashSet<>();
+		doubleNames.add("Artemis Fowl");
+		doubleNames.add("Holly Short");
+		doubleNames.add("Nguyen Xuan");
+		doubleNames.add("Xuan Nguyen");
+		doubleNames.add("James Bond");
+		aliases = new HashMap<>();
+		//aliases.put(key, value)
 	}
 
 	public void setDirectory(String directory) {
@@ -94,41 +116,40 @@ public class TextMiner {
 					// iterate sentences
 					for (CoreMap sentence : sentences) {
 						HashSet<String> personNamesInSentence = new HashSet<String>();
-						ArrayList<String> personDescriptors = new ArrayList<String>();
-						ArrayList<String> relationDescriptors = new ArrayList<>();
+						CoreMap lastPerson = null;
 						// find name entities
 						for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
 							Integer corefClusterId = token.get(CorefClusterIdAnnotation.class);
 							String name = corefIdMapping.get(corefClusterId);
-							
+							if(name!=null){
+								token.set(CoreAnnotations.TextAnnotation.class, name);
+								token.set(CoreAnnotations.LemmaAnnotation.class, name);
+							}
 							String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
 							String word = null;
 							if (ENTITY_TAG.equals(namedEntityTag)) {
 								word = token.get(CoreAnnotations.TextAnnotation.class);
-
+								//check for double name
+								if(lastPerson!=null){
+									String doubleName = lastPerson.get(CoreAnnotations.TextAnnotation.class)+" "+word;
+									if(doubleNames.contains(doubleName)){
+										token.set(CoreAnnotations.TextAnnotation.class, lastPerson.get(CoreAnnotations.TextAnnotation.class));
+										token.set(CoreAnnotations.LemmaAnnotation.class, lastPerson.get(CoreAnnotations.TextAnnotation.class));
+									}
+								}
 								if (corefClusterId != null && name == null) {
 									corefIdMapping.put(corefClusterId, word);
 								}
+								lastPerson = token;
 							} else {
+								lastPerson = null;
 								word = name;
 							}
 
 							if (word != null) {
 								personNamesInSentence.add(word);
 							}
-							String pos = token.get(CoreAnnotations.PartOfSpeechAnnotation.class);
-							//adjectivs
-							if(pos.startsWith("J")){
-								String descriptor = token.get(CoreAnnotations.LemmaAnnotation.class);
-								if(!stopwords.contains(descriptor))
-									personDescriptors.add(descriptor);
-							}
-							// verbs and adverbs
-							else if(pos.startsWith("V") || pos.startsWith("RB")){
-								String descriptor = token.get(CoreAnnotations.LemmaAnnotation.class);
-								if(!stopwords.contains(descriptor))
-									relationDescriptors.add(descriptor);
-							}
+							
 						}
 						// get sentiment
 						Tree tree = sentence.get(SentimentCoreAnnotations.SentimentAnnotatedTree.class);
@@ -136,22 +157,21 @@ public class TextMiner {
 						double sentenceScore = RNNCoreAnnotations.getPredictedClass(tree);
 						
 						
+						entityManager.addEntities(personNamesInSentence);
 						HashSet<String> alreadyChecked = new HashSet<String>();
 						double gamma = 1;
+						
+						//update names before
+						namesBefore.addFirst(personNamesInSentence);
+						sentimentScores.addFirst(sentenceScore);
+						allSentimentScore+=sentenceScore;
+						if(namesBefore.size()>relationRange){
+							namesBefore.removeLast();
+							allSentimentScore-=sentimentScores.removeLast();
+						}
+						
 						for(String personOne:personNamesInSentence){
-							//same sentences
-							if(personNamesInSentence.size()==1)
-								entityManager.addDescriptor(personOne, personDescriptors);
-							else{
-								alreadyChecked.add(personOne);
-								for(String personTwo:personNamesInSentence){
-									if(!alreadyChecked.contains(personTwo)){
-										Relation relation = entityManager.increaseRelation(personOne, personTwo, allSentimentScore/sentences.size());
-										relation.addDescriptors(relationDescriptors);
-									}
-								}
-							}
-							gamma = 1;
+							alreadyChecked.add(personOne);
 							// sentences before
 							for(HashSet<String> sentenceBefore: namesBefore){
 								gamma*=0.8;
@@ -162,15 +182,7 @@ public class TextMiner {
 								}
 							}
 						}
-						// update names before
-						namesBefore.addFirst(personNamesInSentence);
-						sentimentScores.addFirst(sentenceScore);
-						allSentimentScore+=sentenceScore;
-						
-						if(namesBefore.size()>=relationRange){
-							namesBefore.removeLast();
-							allSentimentScore-=sentimentScores.removeLast();
-						}
+						checkDependencies(sentence);
 					}
 				}
 
@@ -204,6 +216,86 @@ public class TextMiner {
 		}
 
 	}
+	private void checkDependencies(CoreMap sentence) {
+		Tree tree = sentence.get(TreeAnnotation.class);
+		// Get dependency tree
+		TreebankLanguagePack tlp = new PennTreebankLanguagePack();
+		GrammaticalStructureFactory gsf = tlp.grammaticalStructureFactory();
+		GrammaticalStructure gs = gsf.newGrammaticalStructure(tree);
+		Collection<TypedDependency> td = gs.typedDependenciesCollapsed();
+		//System.out.println(td);
+
+		Object[] list = td.toArray();
+		TypedDependency typedDependency;
+		HashMap<String,List<NamedEntity>> relationMapping = new HashMap<>();
+		HashMap<String, NamedEntity> adjectives = new HashMap<>();
+		HashSet<String> neg = new HashSet<String>();
+		for (Object object : list) {
+			typedDependency = (TypedDependency) object;
+			String firstDep = typedDependency.dep().lemma();
+			String firstTag = typedDependency.dep().tag();
+			String secondTag = typedDependency.gov().tag();
+			String secondDep = typedDependency.gov().lemma();
+			String rel = typedDependency.reln().getShortName();
+			if(rel.equals("neg")){
+				neg.add(firstDep);
+				neg.add(secondDep);
+			}
+			NamedEntity one = entityManager.getEntity(firstDep);
+			NamedEntity two = entityManager.getEntity(secondDep);
+			if(one == null && two!=null && firstDep!=null /*&& !stopwords.contains(firstDep)*/){
+				if(firstTag.startsWith("J"))
+					adjectives.put(firstDep, two);
+				else if(firstTag.startsWith("VB")){
+					List<NamedEntity> mapped = relationMapping.get(firstDep);
+					if(mapped == null){
+						mapped = new ArrayList<NamedEntity>();
+						relationMapping.put(firstDep, mapped);
+					}
+					mapped.add(two);
+				}
+			}
+			else if(one != null && two==null && secondDep!=null/* && !stopwords.contains(secondDep)*/){
+				if(secondTag.startsWith("J"))
+					adjectives.put(secondDep, one);
+				else if(secondTag.startsWith("VB")){
+					List<NamedEntity> mapped = relationMapping.get(secondDep);
+					if(mapped == null){
+						mapped = new ArrayList<NamedEntity>();
+						relationMapping.put(secondDep, mapped);
+					}
+					mapped.add(one);
+				}
+			}
+		}
+		for(Entry<String,NamedEntity> entry:adjectives.entrySet()){
+			if(!neg.contains(entry.getKey()))
+				entry.getValue().addDescriptor(entry.getKey());
+		}
+		for(Entry<String, List<NamedEntity>> entry: relationMapping.entrySet()){
+			if(!neg.contains(entry.getKey())&&entry.getValue().size()>1){
+				entry.getValue().get(0).getRelation(entry.getValue().get(1)).addDescriptor(entry.getKey());
+			}
+		}
+	}
+
+	private HashSet<String> mapPersons(List<String> entityNames){
+		HashSet<String> persons = new HashSet<>();
+		String before = null;
+		for(String name: entityNames){
+			if(doubleNames.contains(before+" "+name)){
+				continue;
+			}
+			else{
+				if(aliases.get(name)!=null)
+					name = aliases.get(name);
+				persons.add(name);
+				before = name;
+			}
+		}
+		return persons;
+	}
+	
 	public static HashSet<String> readStopwords(String path)
 	  {
 	    HashSet<String> stopwords = new HashSet<String>();
