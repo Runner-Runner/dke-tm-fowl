@@ -166,6 +166,8 @@ public class TextMiner {
 												lastPerson.get(CoreAnnotations.TextAnnotation.class));
 										token.set(CoreAnnotations.LemmaAnnotation.class,
 												lastPerson.get(CoreAnnotations.TextAnnotation.class));
+										word = lastPerson.get(CoreAnnotations.TextAnnotation.class);
+										name = word;
 									}
 								}
 								if (corefClusterId != null && name == null) {
