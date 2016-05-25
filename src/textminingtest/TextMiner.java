@@ -137,13 +137,14 @@ public class TextMiner {
 						for (CoreMap token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
 							Integer corefClusterId = token.get(CorefClusterIdAnnotation.class);
 							String name = corefIdMapping.get(corefClusterId);
+							String origWord = token.get(CoreAnnotations.TextAnnotation.class);
 							if (name != null) {
 								token.set(CoreAnnotations.TextAnnotation.class, name);
 								token.set(CoreAnnotations.LemmaAnnotation.class, name);
+								token.set(CoreAnnotations.NamedEntityTagAnnotation.class, ENTITY_TAG);
 							}
 							String namedEntityTag = token.get(NamedEntityTagAnnotation.class);
 
-							String origWord = token.get(CoreAnnotations.TextAnnotation.class);
 
 							// Quality Measures
 							String entityClass = manualTaggedMapping.get(origWord);
@@ -151,33 +152,31 @@ public class TextMiner {
 								statistics.addData(namedEntityTag, entityClass, origWord);
 							}
 
-							String word = null;
 							if (ENTITY_TAG.equals(namedEntityTag)) {
-								word = origWord;
+								name = token.get(CoreAnnotations.TextAnnotation.class);
 								// check for double name
 								if (lastPerson != null) {
 									String doubleName = lastPerson.get(CoreAnnotations.TextAnnotation.class) + " "
-											+ word;
+											+ name;
 									if (doubleNames.contains(doubleName)) {
 										token.set(CoreAnnotations.TextAnnotation.class,
 												lastPerson.get(CoreAnnotations.TextAnnotation.class));
 										token.set(CoreAnnotations.LemmaAnnotation.class,
 												lastPerson.get(CoreAnnotations.TextAnnotation.class));
-										word = lastPerson.get(CoreAnnotations.TextAnnotation.class);
-										name = word;
+										name = lastPerson.get(CoreAnnotations.TextAnnotation.class);
+										
 									}
 								}
-								if (corefClusterId != null && name == null) {
-									corefIdMapping.put(corefClusterId, word);
+								if (corefClusterId != null) {
+									corefIdMapping.put(corefClusterId, name);
 								}
 								lastPerson = token;
 							} else {
 								lastPerson = null;
-								word = name;
 							}
 
-							if (word != null) {
-								personNamesInSentence.add(word);
+							if (name != null) {
+								personNamesInSentence.add(name);
 							}
 
 						}
