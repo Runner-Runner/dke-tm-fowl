@@ -73,7 +73,7 @@ public class TrainingTagger
   public static void main(String args[])
   {
     TrainingTagger trainingTagger = new TrainingTagger();
-    trainingTagger.start("data/ArtemisFowl1/chapters/clean/combined/combi.txt", 0);
+    trainingTagger.start("data/all/1-the-book.txt", 0);
   }
 
   public void start(String fileName, int startIndex)

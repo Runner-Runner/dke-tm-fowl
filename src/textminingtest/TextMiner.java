@@ -58,6 +58,8 @@ public class TextMiner {
 		doubleNames.add("Nguyen Xuan");
 		doubleNames.add("Xuan Nguyen");
 		doubleNames.add("James Bond");
+		doubleNames.add("Julius Root");
+		doubleNames.add("Angelina Fowl");
 		aliases = new HashMap<>();
 		// aliases.put(key, value)
 	}
@@ -322,7 +324,13 @@ public class TextMiner {
 				System.out.println(entry.getValue().get(0).getName());
 				System.out.println(entry.getValue().get(1).getName());
 				System.out.println(entry.getKey());
-				entry.getValue().get(0).getRelation(entry.getValue().get(1)).addDescriptor(entry.getKey());
+				try{
+        entry.getValue().get(0).getRelation(entry.getValue().get(1)).addDescriptor(entry.getKey());
+        }
+        catch(NullPointerException ex)
+        {
+          //Ignore. Ignore! IGNORE!
+        }
 			}
 		}
 	}
